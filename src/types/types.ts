@@ -29,3 +29,21 @@ export type InputMeta =
       type: "checkbox";
       required: boolean;
     };
+
+export type FormFieldWithMeta<V = FormValue> = FormField<V> & {
+  meta: InputMeta;
+};
+
+export type FormResult = {
+  values: FormValues;
+  fields: Record<string, FormField>;
+  isValid: boolean;
+};
+
+export type FormResultWithMeta = {
+  values: FormValues;
+  fields: Record<string, FormFieldWithMeta>;
+  isValid: boolean;
+};
+
+export type FormFn = (form: HTMLFormElement) => FormResult | FormResultWithMeta;
