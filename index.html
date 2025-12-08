@@ -3,16 +3,117 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ts-val</title>
+    <title>Form Validator - Библиотека валидации форм</title>
+    <link rel="stylesheet" href="/src/style.css">
   </head>
   <body>
     <main>
+      <h1>Библиотека валидации форм</h1>
+      <p>Пример использования библиотеки Form Validator (fv)</p>
+      
       <section>
         <form novalidate>
-          <label>Имя <input type="text" required></label>
-          <p role="alert" aria-live="assertive"></p>
-          <button type="submit">Отправить</button>
+          <div class="field-group">
+            <label for="name">Имя *</label>
+            <input type="text" id="name" name="name" required minlength="2">
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required>
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="password">Пароль *</label>
+            <input type="password" id="password" name="password" required minlength="8">
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="age">Возраст *</label>
+            <input type="number" id="age" name="age" required min="18" max="100">
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="quantity">Количество (кратно 5)</label>
+            <input type="number" id="quantity" name="quantity" step="5" min="0">
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="description">Описание (макс. 100 символов)</label>
+            <textarea id="description" name="description" maxlength="100" rows="3"></textarea>
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="country">Страна *</label>
+            <select id="country" name="country" required>
+              <option value="">Выберите страну</option>
+              <option value="ru">Россия</option>
+              <option value="us">США</option>
+              <option value="uk">Великобритания</option>
+            </select>
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label>Интересы (выберите 1-3 варианта) *</label>
+            <div class="checkbox-group">
+              <label>
+                <input type="checkbox" name="interests" value="sports"> Спорт
+              </label>
+              <label>
+                <input type="checkbox" name="interests" value="music"> Музыка
+              </label>
+              <label>
+                <input type="checkbox" name="interests" value="reading"> Чтение
+              </label>
+              <label>
+                <input type="checkbox" name="interests" value="travel"> Путешествия
+              </label>
+              <label>
+                <input type="checkbox" name="interests" value="coding"> Программирование
+              </label>
+            </div>
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label>Пол *</label>
+            <div class="checkbox-group">
+              <label>
+                <input type="radio" name="gender" value="male" required> Мужской
+              </label>
+              <label>
+                <input type="radio" name="gender" value="female"> Женский
+              </label>
+              <label>
+                <input type="radio" name="gender" value="other"> Другой
+              </label>
+            </div>
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="phone">Телефон (формат: +7-XXX-XXX-XX-XX)</label>
+            <input type="text" id="phone" name="phone" pattern="\+7-\d{3}-\d{3}-\d{2}-\d{2}">
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <div class="field-group">
+            <label for="website">Веб-сайт</label>
+            <input type="url" id="website" name="website">
+            <p role="alert" aria-live="assertive"></p>
+          </div>
+
+          <button type="submit">Отправить форму</button>
         </form>
+        
+        <div id="validation-result" class="validation-result" style="display: none;"></div>
       </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
