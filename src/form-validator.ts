@@ -14,9 +14,6 @@ import type {
   ValidationRule,
 } from "./types/types.js";
 
-/**
- * Получить ValidityState из HTML элемента
- */
 const getValidityState: GetValidityState = (element: HTMLElement): ValidityState => {
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
     return {
@@ -34,7 +31,6 @@ const getValidityState: GetValidityState = (element: HTMLElement): ValidityState
     };
   }
   
-  // Возвращаем валидное состояние по умолчанию для элементов без validity
   return {
     valueMissing: false,
     typeMismatch: false,
@@ -50,17 +46,12 @@ const getValidityState: GetValidityState = (element: HTMLElement): ValidityState
   };
 };
 
-/**
- * Найти label для поля
- */
 const findLabel = (field: HTMLElement): HTMLLabelElement | undefined => {
-  // Проверяем связь через атрибут for
   if (field.id) {
     const label = document.querySelector<HTMLLabelElement>(`label[for="${field.id}"]`);
     if (label) return label;
   }
   
-  // Проверяем родительский label
   let parent = field.parentElement;
   while (parent) {
     if (parent.tagName === "LABEL") {
@@ -72,21 +63,14 @@ const findLabel = (field: HTMLElement): HTMLLabelElement | undefined => {
   return undefined;
 };
 
-/**
- * Найти контейнер для ошибок (обычно следующий элемент с role="alert")
- */
 const findErrorContainer = (field: HTMLElement): HTMLElement | undefined => {
-  // Для чекбоксов и radio ищем контейнер в родительской группе
   if (field instanceof HTMLInputElement && (field.type === "checkbox" || field.type === "radio")) {
-    // Ищем родительский контейнер группы
     let parent = field.parentElement;
     while (parent && parent !== document.body) {
-      // Ищем следующий элемент после группы
       const nextSibling = parent.nextElementSibling;
       if (nextSibling && nextSibling.hasAttribute("role") && nextSibling.getAttribute("role") === "alert") {
         return nextSibling as HTMLElement;
       }
-      // Или ищем родительский контейнер с data-error-container
       if (parent.hasAttribute("data-error-container")) {
         return parent;
       }
@@ -94,7 +78,6 @@ const findErrorContainer = (field: HTMLElement): HTMLElement | undefined => {
     }
   }
   
-  // Ищем следующий элемент с role="alert"
   let next = field.nextElementSibling;
   while (next) {
     if (next.hasAttribute("role") && next.getAttribute("role") === "alert") {
@@ -103,7 +86,6 @@ const findErrorContainer = (field: HTMLElement): HTMLElement | undefined => {
     next = next.nextElementSibling;
   }
   
-  // Ищем родительский контейнер с data-error-container
   let parent = field.parentElement;
   while (parent && parent !== document.body) {
     if (parent.hasAttribute("data-error-container")) {
@@ -115,29 +97,21 @@ const findErrorContainer = (field: HTMLElement): HTMLElement | undefined => {
   return undefined;
 };
 
-/**
- * Получить значение поля
- */
 const getFieldValue = (element: HTMLElement): string | number | string[] => {
   if (element instanceof HTMLInputElement) {
     if (element.type === "checkbox") {
-      // Для чекбоксов возвращаем массив выбранных значений
-      const form = element.form;
-      if (!form) return [];
-      const checkboxes = form.querySelectorAll<HTMLInputElement>(`input[name="${element.name}"][type="checkbox"]`);
+      if (!element.form) return [];
+      const checkboxes = element.form.querySelectorAll<HTMLInputElement>(`input[name="${element.name}"][type="checkbox"]`);
       return Array.from(checkboxes)
         .filter((cb) => cb.checked)
         .map((cb) => cb.value || "on");
     }
     if (element.type === "radio") {
-      // Для radio возвращаем значение выбранной кнопки или пустую строку
-      const form = element.form;
-      if (!form) return "";
-      const selected = form.querySelector<HTMLInputElement>(`input[name="${element.name}"][type="radio"]:checked`);
+      if (!element.form) return "";
+      const selected = element.form.querySelector<HTMLInputElement>(`input[name="${element.name}"][type="radio"]:checked`);
       return selected ? (selected.value || "") : "";
     }
     if (element.type === "number") {
-      // Если поле пустое, возвращаем пустую строку для правильной валидации
       if (element.value === "") {
         return "";
       }
@@ -153,9 +127,6 @@ const getFieldValue = (element: HTMLElement): string | number | string[] => {
   return "";
 };
 
-/**
- * Создать валидатор формы
- */
 export const form: FormValidatorFactory = (
   formElement: HTMLFormElement,
   options: FormValidatorOptions = {}
@@ -169,34 +140,28 @@ export const form: FormValidatorFactory = (
   const fields = new Map<string, FieldConfig>();
   const fieldValidators = new Map<string, FieldValidator>();
   
-  // Собираем все поля формы
   const formFields = formElement.querySelectorAll<HTMLElement>(
     "input, textarea, select"
   );
   
   const processedFields = new Set<string>();
   
-  // Проверяем каждое поле
   for (const field of formFields) {
     const name = field.getAttribute("name");
     if (!name) continue;
     
-    // Для чекбоксов и radio обрабатываем только первый элемент группы
     if (field instanceof HTMLInputElement && (field.type === "checkbox" || field.type === "radio")) {
       if (processedFields.has(name)) {
-        continue; // Пропускаем остальные элементы группы
+        continue;
       }
       processedFields.add(name);
       
-      // Для группы находим первый элемент и его контейнер
       const firstField = formElement.querySelector<HTMLInputElement>(`input[name="${name}"][type="${field.type}"]`);
       if (!firstField) continue;
       
       const label = findLabel(firstField);
-      // Для групп ищем контейнер в родительском элементе группы
       let errorContainer = findErrorContainer(firstField);
       if (!errorContainer) {
-        // Ищем контейнер после родительского элемента группы
         let parent = firstField.parentElement;
         while (parent && parent !== formElement) {
           const next = parent.nextElementSibling;
@@ -208,7 +173,6 @@ export const form: FormValidatorFactory = (
         }
       }
       
-      // Проверяем наличие обязательных элементов
       if (requireLabels && !label) {
         console.warn(`Поле "${name}" не имеет связанного label`);
       }
@@ -219,18 +183,16 @@ export const form: FormValidatorFactory = (
       
       fields.set(name, {
         name,
-        element: firstField, // Используем первый элемент группы
+        element: firstField,
         label,
         errorContainer,
         customMessages: {},
         validationRules: [],
       });
     } else {
-      // Обычные поля
       const label = findLabel(field);
       const errorContainer = findErrorContainer(field);
       
-      // Проверяем наличие обязательных элементов
       if (requireLabels && !label) {
         console.warn(`Поле "${name}" не имеет связанного label`);
       }
@@ -250,7 +212,6 @@ export const form: FormValidatorFactory = (
     }
   }
   
-  // Создаем валидаторы для полей
   const createFieldValidator = (fieldName: string): FieldValidator => {
     const config = fields.get(fieldName);
     if (!config) {
@@ -398,7 +359,6 @@ export const form: FormValidatorFactory = (
     };
   };
   
-  // Валидация правила для строки
   const validateStringRule = (
     rule: ValidationRule,
     value: string
@@ -425,8 +385,7 @@ export const form: FormValidatorFactory = (
         }
         break;
       case "email":
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
           return rule.message || "Неверный формат email";
         }
         break;
@@ -434,20 +393,18 @@ export const form: FormValidatorFactory = (
     return null;
   };
   
-  // Валидация правила для числа
+
   const validateNumberRule = (
     rule: ValidationRule,
     value: number | string
   ): string | null => {
-    // Если значение строка, пытаемся преобразовать в число
     let numValue: number;
     if (typeof value === "string") {
       if (value.trim() === "") {
-        // Пустая строка для required проверяется отдельно
         if (rule.type === "required") {
           return rule.message || "Поле обязательно для заполнения";
         }
-        return null; // Для других правил пустая строка не проверяется
+        return null;
       }
       numValue = parseFloat(value);
     } else {
@@ -475,16 +432,14 @@ export const form: FormValidatorFactory = (
         }
         break;
       case "step":
-        const step = rule.value as number;
-        if (numValue % step !== 0) {
-          return rule.message || `Значение должно быть кратно ${step}`;
+        if (numValue % (rule.value as number) !== 0) {
+          return rule.message || `Значение должно быть кратно ${rule.value as number}`;
         }
         break;
     }
     return null;
   };
   
-  // Валидация правила для массива
   const validateArrayRule = (
     rule: ValidationRule,
     value: string[]
@@ -509,7 +464,6 @@ export const form: FormValidatorFactory = (
     return null;
   };
   
-  // Валидация формы
   const validate = (): FormValidationResult => {
     const errors: ValidationError[] = [];
     
@@ -519,7 +473,6 @@ export const form: FormValidatorFactory = (
       const value = getFieldValue(element);
       let fieldErrors: string[] = [];
       
-      // Сначала проверяем стандартные атрибуты Constraint Validation API
       if (!validity.valid) {
         let errorMessage = "";
         
@@ -580,7 +533,6 @@ export const form: FormValidatorFactory = (
         }
       }
       
-      // Затем проверяем кастомные правила валидации
       if (config.validationRules && config.validationRules.length > 0) {
         for (const rule of config.validationRules) {
           let ruleError: string | null = null;
@@ -589,7 +541,6 @@ export const form: FormValidatorFactory = (
             const strValue = typeof value === "string" ? value : String(value || "");
             ruleError = validateStringRule(rule, strValue);
           } else if (config.fieldType === "number") {
-            // Для чисел можем получить как строку, так и число
             const numericValue = typeof value === "number" || typeof value === "string" ? value : "";
             ruleError = validateNumberRule(rule, numericValue);
           } else if (config.fieldType === "array") {
@@ -599,12 +550,11 @@ export const form: FormValidatorFactory = (
           
           if (ruleError) {
             fieldErrors.push(ruleError);
-            break; // Останавливаемся на первой ошибке
+            break;
           }
         }
       }
       
-      // Добавляем ошибки в общий список
       if (fieldErrors.length > 0) {
         const firstError = fieldErrors[0];
         errors.push({
@@ -612,20 +562,16 @@ export const form: FormValidatorFactory = (
           message: firstError,
         });
         
-        // Выводим ошибку в контейнер
         if (config.errorContainer) {
           config.errorContainer.textContent = firstError;
           config.errorContainer.style.display = "block";
           config.errorContainer.style.visibility = "visible";
         }
         
-        // Добавляем визуальную индикацию ошибки
         element.setAttribute("aria-invalid", "true");
       } else {
-        // Очищаем ошибки если поле валидно
         if (config.errorContainer) {
           config.errorContainer.textContent = "";
-          // Не скрываем контейнер полностью, чтобы не схлопывались отступы
           config.errorContainer.style.display = "block";
           config.errorContainer.style.visibility = "hidden";
         }
